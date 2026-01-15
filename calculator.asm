@@ -11,6 +11,7 @@ section .data
     
     message_error_division_zero  db  "Error: Cannot divide by 0", 0
     message_error_invalid_op     db  "Error: Invalid Operator", 0
+    message_error_overflow       db  "Error: Result exceeds 32-bit signed limit", 0
 
 section .bss
     ; Input buffers
@@ -99,16 +100,19 @@ _start:
 perform_addition:
     mov     eax, [integer_first_number]
     add     eax, [integer_second_number]
+    jo      handle_math_overflow            ; Check if addition overflowed
     jmp     display_final_result
 
 perform_subtraction:
     mov     eax, [integer_first_number]
     sub     eax, [integer_second_number]
+    jo      handle_math_overflow            ; Check if subtraction overflowed
     jmp     display_final_result
 
 perform_multiplication:
     mov     eax, [integer_first_number]
     imul    eax, [integer_second_number]    ; Signed multiply
+    jo      handle_math_overflow            ; imul sets OF if result doesn't fit in EAX
     jmp     display_final_result
 
 perform_division:
@@ -124,6 +128,11 @@ perform_division:
 
 handle_division_zero_error:
     mov     eax, message_error_division_zero
+    call    print_string_then_new_line
+    call    quit
+
+handle_math_overflow:
+    mov     eax, message_error_overflow
     call    print_string_then_new_line
     call    quit
 
